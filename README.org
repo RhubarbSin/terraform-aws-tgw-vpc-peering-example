@@ -1,0 +1,65 @@
+#+title: terraform-aws-client-vpn-example
+* Overview
+  This Terraform configuration provides an example of AWS VPC peering using transit gateways, including single-region and cross-region scenarios. It creates the following resources:
+  - Two VPCs in one ("primary") region and one VPC in another ("secondary") region
+  - An EC2 instance in each VPC
+  - A transit gateway in each region
+  - A VPC peering connection via transit gateway in the primary region
+  - A peering connection between the two transit gateways to provide VPC peering across regions
+* Prerequisites
+  - Git
+  - Terraform
+* Suggested Method of Deployment and Usage
+  If an environment providing the prerequisites is not readily available, AWS CloudShell can be used for deployment. Instructions for installing and using Terraform with CloudShell can be found here: https://github.com/RhubarbSin/terraform-aws-vpc-ec2-amazon-linux-2023-example
+
+  After deployment, the following commands can be used to demonstrate the connectivity among EC2 instances in the three VPCs:
+  - Ping the private IP address of the primary peer EC2 instance from the primary EC2 instance:
+    #+begin_src shell
+    ssh -o StrictHostKeyChecking=no \
+        -i $(terraform output -raw ssh_private_key_file_name) \
+        ec2-user@$(terraform output -raw primary_instance_public_ip) \
+        ping -c 3 $(terraform output -raw primary_peer_instance_private_ip)
+    #+end_src
+  - Ping the private IP address of the primary EC2 instance from the primary peer EC2 instance:
+    #+begin_src shell
+    ssh -o StrictHostKeyChecking=no \
+        -i $(terraform output -raw ssh_private_key_file_name) \
+        ec2-user@$(terraform output -raw primary_peer_instance_public_ip) \
+        ping -c 3 $(terraform output -raw primary_instance_private_ip)
+    #+end_src
+  - Ping the private IP address of the secondary EC2 instance from the primary EC2 instance:
+    #+begin_src shell
+    ssh -o StrictHostKeyChecking=no \
+        -i $(terraform output -raw ssh_private_key_file_name) \
+        ec2-user@$(terraform output -raw primary_instance_public_ip) \
+        ping -c 3 $(terraform output -raw secondary_instance_private_ip)
+    #+end_src
+  - Ping the private IP address of the secondary EC2 instance from the primary peer EC2 instance:
+    #+begin_src shell
+    ssh -o StrictHostKeyChecking=no \
+        -i $(terraform output -raw ssh_private_key_file_name) \
+        ec2-user@$(terraform output -raw primary_peer_instance_public_ip) \
+        ping -c 3 $(terraform output -raw secondary_instance_private_ip)
+    #+end_src
+  - Ping the private IP address of the primary EC2 instance from the secondary EC2 instance:
+    #+begin_src shell
+    ssh -o StrictHostKeyChecking=no \
+        -i $(terraform output -raw ssh_private_key_file_name) \
+        ec2-user@$(terraform output -raw secondary_instance_public_ip) \
+        ping -c 3 $(terraform output -raw primary_instance_private_ip)
+    #+end_src
+  - Ping the private IP address of the primary peer EC2 instance from the secondary EC2 instance:
+    #+begin_src shell
+    ssh -o StrictHostKeyChecking=no \
+        -i $(terraform output -raw ssh_private_key_file_name) \
+        ec2-user@$(terraform output -raw secondary_instance_public_ip) \
+        ping -c 3 $(terraform output -raw primary_peer_instance_private_ip)
+    #+end_src
+* Configuration
+  By default, primary resources are provisioned in the us-east-2 region and secondary resources in the us-west-2 region. The regions used are specified by the value of the /region/ input variable, which is declared as an object. This CLI example specifies us-west-2 as primary and us-east-2 as secondary:
+  #+begin_src shell
+  terraform apply -var 'region={primary="us-west-2",secondary="us-east-2"}'
+  #+end_src
+* Diagram
+  [[./terraform-aws-tgw-vpc-peering-example.png]]
+
