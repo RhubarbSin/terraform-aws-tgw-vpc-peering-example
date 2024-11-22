@@ -1,4 +1,4 @@
-#+title: terraform-aws-client-vpn-example
+#+title: terraform-aws-tgw-vpc-peering-example
 * Overview
   This Terraform configuration provides an example of AWS VPC peering using transit gateways, including single-region and cross-region scenarios. It creates the following resources:
   - Two VPCs in one ("primary") region and one VPC in another ("secondary") region
